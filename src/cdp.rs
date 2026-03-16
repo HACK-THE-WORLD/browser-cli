@@ -150,7 +150,6 @@ pub async fn create_new_tab(port: u16, url: &str) -> Result<TargetJson> {
 pub async fn get_targets(port: u16) -> Result<Vec<TargetJson>> {
     if !chrome_is_running(port).await {
         eprintln!("Starting Chrome with remote debugging on port {}...", port);
-        start_chrome(port)?;
 
         for _ in 0..50 {
             tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;

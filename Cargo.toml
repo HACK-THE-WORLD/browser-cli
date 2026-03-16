@@ -13,7 +13,6 @@ serde_json = { version = "1", features = ["unbounded_depth"] }
 futures = "0.3"
 reqwest = { version = "0.12", features = ["json"] }
 tokio-tungstenite = "0.24"
-base64 = "0.22"
 urlencoding = "2"
 
 [profile.release]
