@@ -78,43 +78,6 @@ impl CdpConnection {
     }
 }
 
-fn find_chrome_executable() -> Option<&'static str> {
-    const CANDIDATES: &[&str] = &[
-        "google-chrome-stable",
-        "google-chrome",
-        "chromium",
-        "chromium-browser",
-    ];
-    for candidate in CANDIDATES {
-        if std::process::Command::new("which")
-            .arg(candidate)
-            .output()
-            .map(|o| o.status.success())
-            .unwrap_or(false)
-        {
-            return Some(candidate);
-        }
-    }
-    None
-}
-
-fn start_chrome(port: u16) -> Result<()> {
-    let chrome = find_chrome_executable().context("Chrome not found in PATH")?;
-    let data_dir = format!("/tmp/browser-cli-chrome-{}", port);
-    std::process::Command::new(chrome)
-        .arg(format!("--remote-debugging-port={}", port))
-        .arg(format!("--user-data-dir={}", data_dir))
-        .arg("--no-first-run")
-        .arg("--no-default-browser-check")
-        .arg("about:blank")
-        .stdin(std::process::Stdio::null())
-        .stdout(std::process::Stdio::null())
-        .stderr(std::process::Stdio::null())
-        .spawn()
-        .context("Failed to start Chrome")?;
-    Ok(())
-}
-
 async fn chrome_is_running(port: u16) -> bool {
     let url = format!("http://127.0.0.1:{}/json/version", port);
     reqwest::get(&url).await.is_ok()
