@@ -2,25 +2,6 @@
 
 Browser automation CLI using Chrome DevTools Protocol. Connects directly to Chrome via CDP without requiring Node.js or Playwright.
 
-## Installation
-
-### From releases
-
-Download the latest binary from [releases](https://github.com/Osso/browser-cli/releases):
-
-```bash
-# Linux amd64
-curl -L https://github.com/Osso/browser-cli/releases/latest/download/browser-cli-linux-amd64 -o browser-cli
-chmod +x browser-cli
-sudo mv browser-cli /usr/local/bin/
-```
-
-### From source
-
-```bash
-cargo install --git https://github.com/Osso/browser-cli
-```
-
 ## Prerequisites
 
 Chrome must be running with remote debugging enabled:
