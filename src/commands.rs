@@ -2,8 +2,11 @@ use anyhow::Result;
 
 use crate::cdp::{self, CdpConnection};
 
-pub async fn cmd_eval(port: u16, script: &str, json: bool) -> Result<()> {
-    let mut cdp = cdp::connect_active(port).await?;
+pub async fn cmd_eval(port: u16, script: &str, json: bool, tab_id: Option<&str>) -> Result<()> {
+    let mut cdp = match tab_id {
+        Some(id) => cdp::connect_by_tab_id(port, id).await?,
+        None => cdp::connect_active(port).await?,
+    };
     let result = cdp.eval(script).await?;
     if json {
         println!("{}", serde_json::to_string(&result)?);
@@ -13,9 +16,17 @@ pub async fn cmd_eval(port: u16, script: &str, json: bool) -> Result<()> {
     Ok(())
 }
 
-pub async fn cmd_get(port: u16, what: &crate::GetCommand, json: bool) -> Result<()> {
+pub async fn cmd_get(
+    port: u16,
+    what: &crate::GetCommand,
+    json: bool,
+    tab_id: Option<&str>,
+) -> Result<()> {
     let targets = cdp::get_targets(port).await?;
-    let target = cdp::find_active_target(&targets)?;
+    let target = match tab_id {
+        Some(id) => cdp::find_target_by_id(&targets, id)?,
+        None => cdp::find_active_target(&targets)?,
+    };
 
     match what {
         crate::GetCommand::Title => print_field(json, "title", &target.title),
@@ -106,7 +117,7 @@ pub async fn cmd_tabs(port: u16, action: &crate::TabsCommand, json: bool) -> Res
                 println!("{}", serde_json::to_string_pretty(&tabs)?);
             } else {
                 for (i, target) in targets.iter().enumerate() {
-                    println!("{}: {} - {}", i, target.title, target.url);
+                    println!("{} [{}]: {} - {}", i, target.id, target.title, target.url);
                 }
             }
         }

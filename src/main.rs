@@ -18,6 +18,10 @@ struct Cli {
     #[arg(long)]
     json: bool,
 
+    /// Execute command on a specific tab id (see `tabs list`)
+    #[arg(short = 't', long)]
+    tab_id: Option<String>,
+
     #[command(subcommand)]
     command: Command,
 }
@@ -67,10 +71,11 @@ async fn main() -> Result<()> {
     let cli = Cli::parse();
     let port = cli.port;
     let json = cli.json;
+    let tab_id = cli.tab_id.as_deref();
 
     match cli.command {
-        Command::Eval { script } => commands::cmd_eval(port, &script, json).await,
-        Command::Get { what } => commands::cmd_get(port, &what, json).await,
+        Command::Eval { script } => commands::cmd_eval(port, &script, json, tab_id).await,
+        Command::Get { what } => commands::cmd_get(port, &what, json, tab_id).await,
         Command::Tabs { action } => commands::cmd_tabs(port, &action, json).await,
     }
 }

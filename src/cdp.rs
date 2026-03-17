@@ -59,7 +59,8 @@ impl CdpConnection {
                 "Runtime.evaluate",
                 serde_json::json!({
                     "expression": expression,
-                    "returnByValue": true
+                    "returnByValue": true,
+                    "awaitPromise": true
                 }),
             )
             .await?;
@@ -142,10 +143,38 @@ pub fn find_active_target(targets: &[TargetJson]) -> Result<&TargetJson> {
         .context("No pages found. Open a tab in Chrome first.")
 }
 
+pub fn find_target_by_id<'a>(targets: &'a [TargetJson], tab_id: &str) -> Result<&'a TargetJson> {
+    if let Ok(index) = tab_id.parse::<usize>() {
+        return targets
+            .get(index)
+            .with_context(|| format!("Tab index out of range: {}", index));
+    }
+
+    targets
+        .iter()
+        .find(|t| t.id == tab_id)
+        .with_context(|| {
+            format!(
+                "Tab not found: {} (use index like 0,1,2 or real id from tabs list)",
+                tab_id
+            )
+        })
+}
+
 /// Connect CDP to the active target
 pub async fn connect_active(port: u16) -> Result<CdpConnection> {
     let targets = get_targets(port).await?;
     let target = find_active_target(&targets)?;
     let ws_url = target.webSocketDebuggerUrl.as_ref().unwrap();
+    CdpConnection::connect(ws_url).await
+}
+
+pub async fn connect_by_tab_id(port: u16, tab_id: &str) -> Result<CdpConnection> {
+    let targets = get_targets(port).await?;
+    let target = find_target_by_id(&targets, tab_id)?;
+    let ws_url = target
+        .webSocketDebuggerUrl
+        .as_ref()
+        .context("Selected tab has no debugger websocket URL")?;
     CdpConnection::connect(ws_url).await
 }

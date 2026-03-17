@@ -36,11 +36,28 @@ browser-cli tabs list                  # List open tabs
 browser-cli eval "document.title"      # Run JavaScript
 ```
 
+### Callback-style APIs
+
+If an API returns data via callback (instead of immediate return), wrap it in a Promise and resolve inside the callback:
+
+```bash
+browser-cli eval "new Promise((resolve, reject) => {
+	const timer = setTimeout(() => reject(new Error('timeout waiting callback')), 10000);
+	window.xxx.register_function((data) => {
+		clearTimeout(timer);
+		resolve(data);
+	});
+	window.xxx.getUser();
+})"
+```
+
 ### Global options
 
 ```bash
 browser-cli --port 9222 ...            # CDP port (default: 9222)
 browser-cli --json ...                 # JSON output
+browser-cli -t <tab> ...               # Run on a specific tab (index or real id)
+browser-cli --tab-id <tab> ...         # Same as -t
 ```
 
 ## Example
